@@ -1,234 +1,61 @@
 # Keyboard Interaction Reference
 
-A comprehensive reference of keyboard shortcuts, focus-trap behaviours, and screen-reader announcement patterns in the TalentTrust frontend.
+This reference covers keyboard behavior implemented by the current dashboard, command palette, export menu, search field, dialogs, and toast notifications.
 
----
+## Dashboard shortcuts
 
-## Global shortcuts
+The dashboard registers these single-key shortcuts through `useHotkeys`:
 
-| Shortcut | Action | Component |
-|----------|--------|-----------|
-| `Ctrl/Cmd + K` | Open / close command palette | `CommandPalette` (`src/components/palette/CommandPalette.tsx:98`) |
-| `j` | Focus next visible escrow card (roving focus) | `EscrowDashboard` (`src/components/EscrowDashboard.tsx`) |
-| `k` | Focus previous visible escrow card (roving focus) | `EscrowDashboard` (`src/components/EscrowDashboard.tsx`) |
-| `/` | Focus escrow search input | `EscrowDashboard` (`src/components/EscrowDashboard.tsx`) |
-| `?` | Open keyboard shortcuts help dialog | `ShortcutsDialog` (`src/components/ShortcutsDialog.tsx`) |
-| `Escape` | Clear search input or close open modal dialog | `EscrowToolbar`, `ShortcutsDialog`, `ConfirmDialog`, `CommandPalette` |
-| `Ctrl/Cmd + Enter` | Submit create-stream form | `CreateStreamForm` (`src/components/CreateStreamForm.tsx:212`) |
-| `Ctrl + Space` | Toggle contract row selection | `ContractRowItem` (`src/components/contracts/ContractRowItem.tsx:53`) |
-| `Escape` | Clear bulk selection (wallet) | `WalletBulkToolbar` (`src/components/wallet/WalletBulkToolbar.tsx:37`) |
-| `Escape` | Clear bulk selection (milestones) | `BulkActionToolbar` (`src/components/milestones/BulkActionToolbar.tsx:59`) |
-| `Escape` | Cancel stream creation | `CreateStreamForm` (`src/components/CreateStreamForm.tsx:216`) |
+| Key | Action | Source |
+|-----|--------|--------|
+| `j` | Focus the next visible escrow card | `src/components/EscrowDashboard.tsx`, `src/hooks/useHotkeys.ts` |
+| `k` | Focus the previous visible escrow card | `src/components/EscrowDashboard.tsx`, `src/hooks/useHotkeys.ts` |
+| `/` | Focus the escrow search field | `src/components/EscrowDashboard.tsx`, `src/components/escrow/EscrowToolbar.tsx` |
+| `?` | Open the keyboard shortcuts dialog | `src/components/EscrowDashboard.tsx`, `src/components/ShortcutsDialog.tsx` |
 
----
+These shortcuts are ignored while focus is in an input, textarea, select, or editable content; while `Ctrl`, `Meta`, or `Alt` is held; and while a native dialog is open. The shortcuts dialog focuses its Close button when opened, closes with `Escape`, and restores focus to the element that was active before it opened.
 
-## Dashboard roving-focus & hotkeys (`useHotkeys`)
+## Command palette
 
-The escrow dashboard registers single-key shortcuts through `useHotkeys` (`src/hooks/useHotkeys.ts`):
+Implemented in `src/components/palette/CommandPalette.tsx`.
 
-- **Input suppression**: Shortcuts are ignored whenever focus is inside an `<input>`, `<textarea>`, `<select>`, or `contenteditable` element, or when `Ctrl`, `Meta`, or `Alt` is held.
-- **Dialog suppression**: Shortcuts are ignored while any native `<dialog>` element is open (`dialog[open]`).
-- **Roving card navigation (`j` / `k`)**: Each `EscrowCard` renders an `<article tabIndex={-1} aria-labelledby="escrow-heading-{id}">` with a visible focus ring. Pressing `j` moves focus to the next visible card on the current page (or the first card if none is focused); pressing `k` moves focus to the previous visible card.
-- **Screen-reader position announcement**: Moving focus between cards updates the polite live region (`data-testid="escrow-live-announcer"`) with `"Escrow {position} of {count}"` (e.g. `"Escrow 3 of 10"`).
-- **Focus search (`/`)**: Moves focus directly to `#escrow-search`.
-- **Shortcuts help (`?`)**: Opens `ShortcutsDialog` (`src/components/ShortcutsDialog.tsx`), a native modal `<dialog>` listing available shortcuts, and restores focus to the previously focused element when closed.
+| Key | Action |
+|-----|--------|
+| `Ctrl+K` / `Cmd+K` | Open or close the palette. The shortcut is ignored when invoked from another input, textarea, or editable element outside the palette. |
+| `ArrowDown` / `ArrowUp` | Move the selected command down or up, wrapping at either end. |
+| `Home` / `End` | Select the first or last command. |
+| `Enter` | Run the selected command. |
+| `Escape` | Close the palette. |
 
----
+Opening the palette focuses its search field. Closing it restores focus to the element that opened it, including when closed with `Escape` or after running a command.
 
-## Dialog focus-trap behaviour
+## Export menu
 
-All modal dialogs use the shared `useDialogFocusTrap` hook or an equivalent inline implementation. The core behaviour is:
+Implemented in `src/components/escrow/ExportMenu.tsx`.
 
-| Key | Behaviour |
-|-----|-----------|
-| `Escape` | Closes the dialog / cancels the action |
-| `Tab` | Cycles focus to next focusable element within the dialog |
-| `Shift + Tab` | Cycles focus to previous focusable element within the dialog |
+| Key | Action |
+|-----|--------|
+| `ArrowDown` on the trigger | Open the menu and focus the first item. |
+| `ArrowUp` on the trigger | Open the menu and focus the last item. |
+| `ArrowDown` / `ArrowUp` in the menu | Move focus between the export items, wrapping at either end. |
+| `Home` / `End` in the menu | Focus the first or last item. |
+| `Escape` in the menu | Close the menu and return focus to the Export CSV button. |
+| `Tab` in the menu | Close the menu and allow normal tab progression. |
 
-Focus is moved to an initial element when the dialog opens (`initialFocusRef`). When `restoreFocus` is enabled, focus returns to the element that triggered the dialog on close.
+Choosing an export also closes the menu and returns focus to its trigger. Clicking outside closes it without an explicit focus change.
 
-### Components using `useDialogFocusTrap`
+## Search field
 
-All in `src/hooks/useDialogFocusTrap.ts`.
+The search input in `src/components/escrow/EscrowToolbar.tsx` handles `Escape` only when the search value is non-empty: it prevents the default action and clears the query. Focus remains in the search field. With an empty query, the field does not handle `Escape`.
 
-| Component | Initial focus | `restoreFocus` | Source |
-|-----------|---------------|----------------|--------|
-| `ConfirmDialog` | Cancel button | Yes | `src/components/ConfirmDialog.tsx:70` |
-| `CommandPalette` | Search input | Yes | `src/components/CommandPalette.tsx:160` |
-| `ContractCreationForm` | First field | No | `src/components/ContractCreationForm.tsx:50` |
-| `MilestoneCreationForm` | First field | No | `src/components/milestones/MilestoneCreationForm.tsx:129` |
+## Dialogs and disclosures
 
-### Self-contained focus traps (inline)
+- `src/components/ui/ConfirmDialog.tsx` handles `Escape` as Cancel. The danger variant initially focuses its safe Cancel button; the default variant initially focuses Confirm. When used through `src/components/ui/ConfirmProvider.tsx`, closing restores focus to the element active before the confirmation was opened.
+- `src/hooks/useDisclosure.ts` closes an open disclosure on `Escape` and returns focus to its trigger.
+- The command palette and keyboard shortcuts dialog also close on `Escape`; their focus behavior is described above.
 
-| Component | Behaviour | Source |
-|-----------|-----------|--------|
-| `SettingsPanel` | Initial focus on Close button; Tab/Shift+Tab wrap; Escape closes; restores focus to previously focused element on close | `src/components/settings/SettingsPanel.tsx:136` |
-| `ToastProvider` | Soft trap: Tab/Shift+Tab cycle inside the toast viewport (users can Tab out to browser chrome) | `src/components/toast/toast-provider.tsx:674` |
+## Screen-reader announcements
 
-### Background confinement
-
-When `ConfirmDialog` is open, all sibling elements are marked `aria-hidden="true"` and `inert` (with restoration on close) — see `src/components/ConfirmDialog.tsx:80`.
-
----
-
-## Inline editing
-
-| Shortcut | Behaviour | Component |
-|----------|-----------|-----------|
-| `Escape` | Cancel inline edit of contract name | `EditableContractRow` (`src/components/EditableContractRow.tsx:69`) |
-| `Escape` | Cancel inline edit of milestone | `MilestoneRow` (`src/components/milestones/MilestoneRow.tsx:158`) |
-
----
-
-## Toolbar arrow-key navigation
-
-The `BulkActionToolbar` implements the [WAI-ARIA toolbar pattern](https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/) once a selection is active:
-
-| Key | Behaviour |
-|-----|-----------|
-| `ArrowRight` / `ArrowDown` | Move focus to the next toolbar item (wraps) |
-| `ArrowLeft` / `ArrowUp` | Move focus to the previous toolbar item (wraps) |
-| `Home` | Move focus to the first toolbar item |
-| `End` | Move focus to the last toolbar item |
-| `Escape` | Clear selection (dismisses toolbar) |
-
-Source: `src/components/milestones/BulkActionToolbar.tsx:51`.
-
----
-
-## Radio group arrow-key navigation
-
-The `RadioGroup` component in `SettingsPanel` implements standard radio-group keyboard navigation:
-
-| Key | Behaviour |
-|-----|-----------|
-| `ArrowRight` / `ArrowDown` | Select and focus the next radio option |
-| `ArrowLeft` / `ArrowUp` | Select and focus the previous radio option |
-| `Enter` / `Space` | Select the focused option (on individual radio buttons) |
-
-Source: `src/components/settings/SettingsPanel.tsx:28`.
-
----
-
-## Command palette navigation
-
-| Key | Behaviour |
-|-----|-----------|
-| `ArrowDown` | Move selection to the next result |
-| `ArrowUp` | Move selection to the previous result |
-| `Enter` | Activate the selected command (navigates or calls `onSelect`) |
-| `Escape` | Close palette (via `useDialogFocusTrap`) |
-| `Ctrl/Cmd + K` | Toggle open / close (global) |
-
-Source: `src/components/CommandPalette.tsx:185`.
-
----
-
-## List / row navigation
-
-| Shortcut | Behaviour | Component |
-|----------|-----------|-----------|
-| `Enter` | Open / navigate to contract row details | `ContractRowItem` (`src/components/contracts/ContractRowItem.tsx:78`) |
-
----
-
-## Screen-reader announcement model
-
-The app uses several patterns to communicate dynamic changes to assistive technology without visual disruption.
-
-### `useFormAnnouncer` hook
-
-A dedicated hook in `src/hooks/useFormAnnouncer.ts` provides debounced live-region announcements for async form results:
-
-- **`politeMessage`** — rendered in `aria-live="polite"` (success outcomes, queued when reader is idle)
-- **`assertiveMessage`** — rendered in `aria-live="assertive"` (error outcomes, interrupts current speech)
-- **Debounce** — rapid calls within 300ms (default) coalesce: only the last call fires
-- **Auto-clear** — messages clear after 5000ms (default) to prevent stale re-reads
-
-Usage example:
-```tsx
-const { politeMessage, assertiveMessage, announce } = useFormAnnouncer();
-
-// On success:
-announce({ message: 'Form submitted successfully.', type: 'success' });
-// On error:
-announce({ message: 'Submission failed.', type: 'error' });
-
-// In JSX:
-<div aria-live="polite" aria-atomic="true" className="sr-only">{politeMessage}</div>
-<div aria-live="assertive" aria-atomic="true" className="sr-only">{assertiveMessage}</div>
-```
-
-### `ToastAnnouncer`
-
-Rendered in `src/components/toast/toast-provider.tsx:244`. Three screen-reader-only live regions:
-
-| Region | `aria-live` | Content |
-|--------|-------------|---------|
-| Latest success toast | `polite` | Title + description of the most recent success toast |
-| Latest error toast | `assertive` | Title + description of the most recent error toast |
-| Aggregate status | `polite` | Notification count summary (e.g. "3 notifications (2 errors, 1 success)"), debounced by 500ms |
-
-### Wallet connection announcements
-
-`WalletContext` (`src/contexts/WalletContext.tsx`) uses an inline `role="status"` live region:
-
-- Announces `"Wallet connected"` or `"Wallet connection failed"` after a 150ms debounce
-- Rendered as `<div role="status" aria-live="polite" aria-atomic="true" className="sr-only">`
-
-### `ContractStatusAnnouncer`
-
-`src/components/ContractStatusAnnouncer.tsx` — announces contract status transitions:
-
-- Only announces changes (skips the initial status on mount)
-- Format: `"Contract status changed to {status}."`
-- Uses `aria-live="polite"` with `role="status"`
-
-### Inline live regions
-
-| Component | Trigger | Source |
-|-----------|---------|--------|
-| `EditableContractRow` | Announces `"Edit cancelled."` or `"Contract \"{name}\" updated."` after editing | `src/components/EditableContractRow.tsx:52` |
-| `ActionPanel` | Announces character count for dispute reason (switches to `assertive` near the limit) | `src/components/ActionPanel.tsx:471` |
-
-### `KbdHint` component
-
-`src/components/KbdHint.tsx` — a reusable component for rendering keyboard shortcut hints:
-
-- Each key is a semantic `<kbd>` element
-- `+` separators are `aria-hidden="true"`
-- The wrapper has `role="img"` with a synthesised `aria-label` (e.g. `"Ctrl+Enter — to submit"`)
-- Supports `srOnly` mode for screen-reader-only hints
-
----
-
-## ARIA roles and patterns
-
-| Role | Used in | Purpose |
-|------|---------|---------|
-| `dialog` | `ConfirmDialog`, `CommandPalette`, `SettingsPanel` | Modal dialog container |
-| `alertdialog` | `ConfirmDialog` (when `tone="destructive"`) | Destructive-action confirmation |
-| `radiogroup` | `SettingsPanel` `RadioGroup` | Group of radio options |
-| `radio` | `SettingsPanel` radio buttons, Form Density | Individual radio option |
-| `switch` | `SettingsPanel` Quiet Mode toggle | Binary on/off control |
-| `toolbar` (implied) | `BulkActionToolbar` | Toolbar with arrow-key navigation |
-| `listbox` | `CommandPalette` results list | List of selectable commands |
-| `option` | `CommandPalette` result items | Individual command option |
-| `combobox` | `CommandPalette` search input | Search input with listbox |
-| `status` | `ContractStatusAnnouncer`, `ToastAnnouncer`, wallet announcer | Live region for status updates |
-| `alert` | `ConfirmDialog` error message, `SettingsPanel` `ThemeErrorBoundary` | Time-sensitive important message |
-| `img` | `KbdHint` wrapper | Treats keyboard shortcut as a single meaningful unit |
-
----
-
-## `FOCUSABLE_SELECTORS`
-
-The CSS selector used to identify focusable elements within dialogs and panels:
-
-```
-button:not([disabled]), [href], input:not([disabled]),
-select:not([disabled]), textarea:not([disabled]),
-[tabindex]:not([tabindex="-1"])
-```
-
-Used by `useDialogFocusTrap` (`src/hooks/useDialogFocusTrap.ts:5`) and `SettingsPanel` (`src/components/settings/SettingsPanel.tsx:8`). The `ToastProvider` variant in `src/components/toast/toast-provider.tsx` uses an equivalent selector.
+- `src/components/EscrowDashboard.tsx` has a polite live region. It announces the focused escrow's position when navigating cards with `j` / `k` and announces dashboard feedback set by its actions.
+- `src/components/palette/CommandPalette.tsx` has a polite status region for action feedback, such as copying the contract ID or opening API documentation.
+- `src/components/toast/ToastProvider.tsx` places success and informational toasts in a `role="status"` polite live region and error toasts in a `role="alert"` assertive live region. A focused toast can be dismissed with `Escape`.
