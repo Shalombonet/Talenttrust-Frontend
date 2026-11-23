@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import useSWR, { SWRConfig, useSWRConfig } from 'swr';
+import useSWR, { SWRConfig, useSWRConfig, type Cache } from 'swr';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, type EscrowContract, type Reputation } from '@/lib/api';
 import { contractKey, contractsListKey, CONTRACTS_PREFIX, SwrProvider } from '@/lib/swr';
@@ -38,7 +38,7 @@ function makeContract(overrides: Partial<EscrowContract> = {}): EscrowContract {
   };
 }
 
-function createWrapper(cache: Map<string, unknown> = new Map()) {
+function createWrapper(cache: Cache<any> = new Map()) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
       <SWRConfig value={{ provider: () => cache, dedupingInterval: 0 }}>
@@ -142,7 +142,7 @@ describe('useEscrowMutation', () => {
 
       apiMock.mockResolvedValueOnce({ data: updated });
 
-      const cache = new Map<string, unknown>();
+      const cache: Cache<any> = new Map();
       const allListKey = contractsListKey();
       const filteredListKey = contractsListKey({ status: 'Created' });
 
@@ -157,9 +157,9 @@ describe('useEscrowMutation', () => {
         () => {
           const mutation = useEscrowMutation();
           const swr = useSWRConfig();
-          const detail = useSWR<EscrowContract>(contractKey(7), undefined, noFetchOpts);
-          const allList = useSWR<{ data: EscrowContract[] }>(allListKey, undefined, noFetchOpts);
-          const filteredList = useSWR<{ data: EscrowContract[] }>(filteredListKey, undefined, noFetchOpts);
+          const detail = useSWR<EscrowContract>(contractKey(7), null, noFetchOpts);
+          const allList = useSWR<{ data: EscrowContract[] }>(allListKey, null, noFetchOpts);
+          const filteredList = useSWR<{ data: EscrowContract[] }>(filteredListKey, null, noFetchOpts);
           return {
             mutation,
             swr,
@@ -195,7 +195,7 @@ describe('useEscrowMutation', () => {
 
       apiMock.mockResolvedValueOnce(created);
 
-      const cache = new Map<string, unknown>();
+      const cache: Cache<any> = new Map();
       const listKey = contractsListKey();
 
       const noFetchOpts = {
@@ -209,8 +209,8 @@ describe('useEscrowMutation', () => {
         () => {
           const mutation = useEscrowMutation();
           const swr = useSWRConfig();
-          const detail = useSWR<EscrowContract>(contractKey(2), undefined, noFetchOpts);
-          const list = useSWR<{ data: EscrowContract[] }>(listKey, undefined, noFetchOpts);
+          const detail = useSWR<EscrowContract>(contractKey(2), null, noFetchOpts);
+          const list = useSWR<{ data: EscrowContract[] }>(listKey, null, noFetchOpts);
           return {
             mutation,
             swr,
@@ -253,7 +253,7 @@ describe('useEscrowMutation', () => {
         .mockResolvedValueOnce(reputation)
         .mockResolvedValueOnce({ data: [refreshed] });
 
-      const cache = new Map<string, unknown>();
+      const cache: Cache<any> = new Map();
       const listKey = contractsListKey();
 
       const wrapper = ({ children }: { children: ReactNode }) => (
@@ -306,7 +306,7 @@ describe('useEscrowMutation', () => {
 
       apiMock.mockRejectedValueOnce(apiError);
 
-      const cache = new Map<string, unknown>();
+      const cache: Cache<any> = new Map();
       const listKey = contractsListKey();
 
       const noFetchOpts = {
@@ -320,7 +320,7 @@ describe('useEscrowMutation', () => {
         () => {
           const mutation = useEscrowMutation();
           const swr = useSWRConfig();
-          const list = useSWR<{ data: EscrowContract[] }>(listKey, undefined, noFetchOpts);
+          const list = useSWR<{ data: EscrowContract[] }>(listKey, null, noFetchOpts);
           return { mutation, swr, listData: list.data };
         },
         { wrapper: createWrapper(cache) },

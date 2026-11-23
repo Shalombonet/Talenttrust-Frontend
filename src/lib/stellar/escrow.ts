@@ -8,6 +8,7 @@ import {
 } from '@stellar/stellar-sdk';
 import { getRpcServer, NETWORK_PASSPHRASE, simulateRead } from './rpc';
 import { site } from '../site';
+import { formatStroopsTrimmed } from './stroops';
 
 /**
  * Validity window (seconds) for transactions built by this module.
@@ -281,8 +282,6 @@ export function extractContractErrorCode(errStr: string): number | null {
 
 /** Format stroops (bigint) as 7-decimal XLM string. No Number() on stroop values. */
 export function formatStroops(stroops: bigint): string {
-  const whole = stroops / 10_000_000n;
-  const frac = stroops % 10_000_000n;
-  const fracStr = frac.toString().padStart(7, '0').replace(/0+$/, '') || '0';
-  return `${whole}.${fracStr}`;
+  const formatted = formatStroopsTrimmed(stroops);
+  return formatted.includes('.') ? formatted : `${formatted}.0`;
 }

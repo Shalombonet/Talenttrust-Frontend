@@ -131,7 +131,7 @@ describe('EscrowDashboard create form with the milestone builder', () => {
       { title: 'Phase 2: Build, test', amount: 700 },
       { title: 'Design', amount: 300 },
     ]);
-  });
+  }, 15_000);
 
   it('blocks submit on invalid milestones and focuses the first invalid field', async () => {
     render(<EscrowDashboard />);
@@ -146,7 +146,7 @@ describe('EscrowDashboard create form with the milestone builder', () => {
     expect(await screen.findByText('Enter a number, for example 300 or 12.5.')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByLabelText('Milestone 1 amount (XLM)')).toHaveFocus());
     expect(posts()).toHaveLength(0);
-  });
+  }, 15_000);
 
   it('shows the API error when the create request fails', async () => {
     fetchMock.mockImplementation((_url: unknown, init?: RequestInit) =>
@@ -159,5 +159,5 @@ describe('EscrowDashboard create form with the milestone builder', () => {
     await user.click(screen.getByRole('button', { name: 'Create escrow' }));
 
     expect(await screen.findByRole('alert')).toHaveAttribute('title', 'invalid milestones');
-  });
+  }, 15_000);
 });

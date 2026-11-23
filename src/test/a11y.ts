@@ -22,12 +22,14 @@ function TestProviders({ children }: { children: ReactNode }) {
       null,
       createElement(
         SwrProvider,
-        { value: { shouldRetryOnError: () => false, revalidateOnFocus: false } },
-        createElement(
-          ConfirmProvider,
-          null,
-          createElement(NotificationsProvider, { poller: { intervalMs: 60_000 } }, children),
-        ),
+        {
+          value: { shouldRetryOnError: () => false, revalidateOnFocus: false },
+          children: createElement(
+            ConfirmProvider,
+            null,
+            createElement(NotificationsProvider, { poller: { intervalMs: 60_000 }, children }),
+          ),
+        },
       ),
     ),
   );

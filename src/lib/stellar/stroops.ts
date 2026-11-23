@@ -64,3 +64,22 @@ export function xlmFromStroops(stroops: bigint): string {
   const fracPart = stroops % STROOPS_PER_XLM;
   return `${intPart}.${String(fracPart).padStart(MAX_DECIMALS, '0')}`;
 }
+
+/** Format stroops as XLM, removing insignificant fractional zeroes. */
+export function formatStroopsTrimmed(stroops: bigint): string {
+  const negative = stroops < 0n;
+  const abs = negative ? -stroops : stroops;
+  const whole = abs / STROOPS_PER_XLM;
+  const fraction = (abs % STROOPS_PER_XLM).toString().padStart(MAX_DECIMALS, '0').replace(/0+$/, '');
+  return `${negative ? '-' : ''}${whole}${fraction ? `.${fraction}` : ''}`;
+}
+
+/** Parse a decimal XLM string into stroops. Returns null for invalid input. */
+export function parseStroops(text: string): bigint | null {
+  const value = text.trim();
+  const match = /^(-?)(\d+)(?:\.(\d{1,7}))?$/.exec(value);
+  if (!match) return null;
+  const [, sign, whole, fraction = ''] = match;
+  const result = BigInt(whole) * STROOPS_PER_XLM + BigInt(fraction.padEnd(MAX_DECIMALS, '0'));
+  return sign ? -result : result;
+}

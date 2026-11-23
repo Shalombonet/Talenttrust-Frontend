@@ -1,13 +1,13 @@
 import { scValToNative, type rpc, type xdr } from '@stellar/stellar-sdk';
 import { site } from '../site';
 import { getRpcServer } from './rpc';
+import { formatStroopsTrimmed } from './stroops';
 
 /** ~24h of ledgers at a 5s close time. */
 export const EVENT_LOOKBACK_LEDGERS = 17_280;
 export const DEFAULT_EVENT_LIMIT = 10;
 const PAGE_SIZE = 100;
 const MAX_PAGES = 10;
-const STROOPS_PER_XLM = BigInt(10_000_000);
 
 interface EventMeta {
   /** Stable dedupe key: event id + paging token. */
@@ -116,12 +116,10 @@ export function decodeEvent(raw: RawContractEvent): ActivityEvent {
 
 /** Format stroops as XLM, trimming trailing zeros ("1500000000" -> "150"). */
 export function formatXlm(stroops: bigint): string {
-  const negative = stroops < BigInt(0);
-  const abs = negative ? -stroops : stroops;
-  const whole = abs / STROOPS_PER_XLM;
-  const fraction = (abs % STROOPS_PER_XLM).toString().padStart(7, '0').replace(/0+$/, '');
-  const grouped = whole.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return `${negative ? '-' : ''}${grouped}${fraction ? `.${fraction}` : ''} XLM`;
+  const formatted = formatStroopsTrimmed(stroops);
+  const [whole, fraction] = formatted.split('.');
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${grouped}${fraction ? `.${fraction}` : ''} XLM`;
 }
 
 export function shortAddress(address: string): string {
