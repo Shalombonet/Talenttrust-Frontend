@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import 'vitest-axe/extend-expect';
@@ -301,11 +301,10 @@ describe('ActivityFeed', () => {
     fetchEventsSince
       .mockResolvedValueOnce({ events: [deposit], cursor: 'c1' })
       .mockResolvedValueOnce({ events: [release], cursor: 'c2' });
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<ActivityFeed />);
     await flush();
 
-    await user.click(screen.getByRole('button', { name: 'Deposits' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Deposits' }));
     expect(items()).toHaveLength(1);
 
     await advance(ACTIVITY_POLL_MS);

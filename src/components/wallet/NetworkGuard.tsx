@@ -18,7 +18,7 @@ function NetworkGuardBanner() {
     return null;
   }
 
-  const networkName = site.network === 'public' ? 'Mainnet' : site.network.charAt(0).toUpperCase() + site.network.slice(1);
+  const networkName = site.network === 'mainnet' ? 'Mainnet' : site.network.charAt(0).toUpperCase() + site.network.slice(1);
   const actualNetwork = state.passphrase.includes('Public Global Stellar Network') ? 'Mainnet' :
                        state.passphrase.includes('Test SDF Network') ? 'Testnet' :
                        state.passphrase.includes('Future Network') ? 'Futurenet' : 'Unknown';

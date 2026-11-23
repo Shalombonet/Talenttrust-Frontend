@@ -168,7 +168,7 @@ describe('OfflineIndicator', () => {
 
     const indicator = screen.getByRole('status');
     expect(indicator).toBeInTheDocument();
-    expect(screen.getByText('Offline')).toBeInTheDocument();
+    expect(screen.getByText('You are offline. Showing previously loaded data.')).toBeInTheDocument();
   });
 
   it('updates when going from online to offline', () => {

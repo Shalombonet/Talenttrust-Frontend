@@ -12,7 +12,6 @@ const Networks = {
  */
 export function expectedPassphrase(): string {
   switch (site.network) {
-    case 'public':
     case 'mainnet':
       return Networks.PUBLIC;
     case 'testnet':

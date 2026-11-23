@@ -2,10 +2,11 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RouteError } from '@/components/ui/RouteError';
-import { setErrorReporter } from '@/lib/errorReporter';
+import { __resetDedupeForTests, setErrorReporter } from '@/lib/errorReporter';
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  __resetDedupeForTests();
   setErrorReporter(null);
 });
 
@@ -46,7 +47,7 @@ describe('RouteError', () => {
     const { rerender } = render(<RouteError error={error} reset={vi.fn()} />);
     rerender(<RouteError error={error} reset={vi.fn()} />);
     expect(reporter).toHaveBeenCalledTimes(1);
-    expect(reporter.mock.calls[0][0]).toBe(error);
-    expect(reporter.mock.calls[0][1]).toMatchObject({ source: 'RouteError', digest: 'abc123' });
+    expect(reporter.mock.calls[0][0]).toMatchObject({ message: error.message, name: error.name });
+    expect(reporter.mock.calls[0][1]).toMatchObject({ source: 'route-error', digest: 'abc123' });
   });
 });

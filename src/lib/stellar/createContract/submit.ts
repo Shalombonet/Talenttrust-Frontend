@@ -45,7 +45,6 @@ const POLL_INTERVAL_MS = 3_000;
  * can display it directly without further parsing.
  */
 export async function simulateSignSubmit(tx: Transaction): Promise<SubmitResult> {
-  const networkPassphrase = stellarConfig.passphrase;
   try {
     return await submitTransaction(tx);
   } catch (err) {
@@ -54,6 +53,7 @@ export async function simulateSignSubmit(tx: Transaction): Promise<SubmitResult>
 }
 
 async function submitTransaction(tx: Transaction): Promise<SubmitResult> {
+  const networkPassphrase = stellarConfig.passphrase;
   const server = getRpcServer();
 
   // ── 1. Simulate & prepare ────────────────────────────────────────────────

@@ -39,6 +39,8 @@ export const staticCommands: CommandItem[] = [
 
 export function parseDynamicCommands(query: string): CommandItem[] {
   const trimmed = query.trim();
+  const normalized = normalizeAddress(trimmed);
+  const isAddressLikeQuery = /^[A-Z0-9]{56}$/i.test(normalized);
   const dynamic: CommandItem[] = [];
 
   // Match escrow ID (#12 or 12)
@@ -55,7 +57,7 @@ export function parseDynamicCommands(query: string): CommandItem[] {
   }
 
   // Match Stellar account address (G...), validated including checksum
-  if (/^G/i.test(normalizeAddress(trimmed)) || /^[A-Z0-9]{56}$/i.test(normalizeAddress(trimmed))) {
+  if (/^G/i.test(normalized) || isAddressLikeQuery) {
     const validation = validateAddress(trimmed);
     if (validation.ok) {
       const address = validation.value;
@@ -72,7 +74,7 @@ export function parseDynamicCommands(query: string): CommandItem[] {
 
   // The contracts dashboard searches titles, parties, tokens, and milestones.
   // Offer that same search from the command palette for any other text query.
-  if (trimmed && !escrowMatch && !isStellarAddress) {
+  if (trimmed && !escrowMatch && !isAddressLikeQuery) {
     const encoded = encodeURIComponent(trimmed);
     dynamic.push({
       id: `dynamic-escrow-search-${trimmed.toLowerCase()}`,

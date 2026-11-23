@@ -123,14 +123,15 @@ function isValidStore(value: unknown): value is WatchStore {
   });
 }
 
-const watchStore = createVersionedStore<WatchStore>({
+const watchStore = createVersionedStore<WatchStore, WatchedEscrow>({
   key: WATCH_STORE_KEY,
   version: WATCH_STORE_VERSION,
   validate: isValidStore,
   empty: () => ({ version: WATCH_STORE_VERSION, items: [] }),
   maxItems: WATCH_MAX_ITEMS,
-  itemsOf: (store) => store.items,
+  items: (store) => store.items,
   withItems: (store, items) => ({ version: WATCH_STORE_VERSION, items }),
+  label: 'Watched escrow',
 });
 
 export function loadStore(): WatchStore {

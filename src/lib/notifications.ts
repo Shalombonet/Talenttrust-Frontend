@@ -46,12 +46,14 @@ function isValidStore(value: unknown): value is NotificationsStore {
   return v.items.every(isValidItem);
 }
 
-const notificationsStore = createVersionedStore<NotificationsStore>({
+const notificationsStore = createVersionedStore<NotificationsStore, NotificationItem>({
   key: NOTIFICATIONS_KEY,
   version: NOTIFICATIONS_VERSION,
   validate: isValidStore,
   empty: emptyStore,
   maxItems: NOTIFICATIONS_MAX,
+  items: (store) => store.items,
+  withItems: (store, items) => ({ ...store, items }),
   label: 'Notification',
 });
 
